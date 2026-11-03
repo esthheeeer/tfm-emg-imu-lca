@@ -1,40 +1,14 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.3, P8)
-%
-% BASE: v3.2 de P8 (v3.2 de P5 sin particularidades de sensores) aplicada a P8.
-% Cambios v3 respecto a la v2 de P8:
-%   1. UNIDADES EMG: cada canal de cada archivo se convierte a uV (armonizarUnidadEMG).
-%   2. Cuaterniones: validez por norma RELATIVA (nodos con norma 8,19 o 8192).
-%   3. Comprobacion de Fs del archivo frente a FsEMG.
-%   4. Calidad cinematica por archivo, % no valido por sensor y n efectivo del ROM.
-%   5. MVC: n de ensayos validos y cociente max/min.
-%   6. Desfase izq-der: solo en S, solo si |lag| >= minLagCorregir_s y la correlacion mejora.
-%   7. Distancia minima entre picos POR EJERCICIO (distanciaMinPicosEj).
-%   8. Seccion 12: LSI = operada/sana x 100, Delta y calidad 0/1/2 -> P8_resumen_global.csv
-%   9. cargarCSV prueba varios delimitadores/decimales y NO elimina columnas vacias.
-%  10. Segmentacion: relleno final (padFinalSeg_s), descarte de fragmentos (fracDurMinRep),
-%      primer valle mejorado, excluirVentana, excluirROM, impresion de cada repeticion y modos
-%      'HD','HI','VLD','VLI'.
-%  11. Calidad del ROM: n efectivo minimo nMinROM = 5 (operada y sana).
-%  12. Canal sin senal en UN lado => Calidad 0 y LSI NaN.
-%  13. excluirROM anula la articulacion tambien en las curvas medias.
-%  14. segmentarRepeticiones: umbral de rescate de la ultima repeticion 0,45.
-% Cambios v3.3 (P8):
-%  15. Escalon segmentado por la envolvente del VL de la pierna guia (ED -> 'VLD', EI -> 'VLI'),
-%      repeticion CENTRADA en cada pico: evita los cortes valle-valle de 1,2 s y 3,9 s de la v3.2.
-%  16. distanciaMinPicosEj('ED') = distanciaMinPicosEj('EI') = 2,0 s.
-%  17. calidadManual: Pico_BF|S y Media_BF|S = 1 (activacion de BF I < 15 %MVC en S).
-%  18. pelvisRefHip ('propia' | 'I' | 'D'): pelvis usada como referencia de las caderas.
-%  19. valleDesdeMitad (false por defecto): plan B del corte valle-valle en segmentarRepeticiones.
-%
+
 % LADO OPERADO DE P8: DERECHO (VERIFICAR).
-% PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC y modoSegmentacion.
+
 clear; clc; close all;
 
 %% ============================================================
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P8';
-ladoOperado = 'D';          % <<< 'D' o 'I': lado de la rodilla intervenida (VERIFICAR)
+ladoOperado = 'D';          % <<< 'D': lado de la rodilla intervenida
 
 mvcManual = struct();       % ej.: mvcManual.VM_I = 150;  (en uV RMS)
 
@@ -50,7 +24,7 @@ nombreEjercicio = containers.Map( ...
 
 % Senal de segmentacion: 'ambas' | 'D' | 'I' (rodilla) | 'HD' | 'HI' (cadera) | 'VLD' | 'VLI' (EMG del VL)
 % Si la rodilla pedida no tiene senal, se usa la del otro lado (se avisa en consola).
-% P8 (v3.3): escalon segmentado por la envolvente del VL de la pierna guia (repeticion centrada en el pico).
+% escalon segmentado por la envolvente del VL de la pierna guia (repeticion centrada en el pico).
 % Plan B si falla: ED 'HD' / EI 'HI' (cadera) o activar valleDesdeMitad con 'D' / 'I'.
 modoSegmentacion = containers.Map({'S','ED','EI'},{'ambas','VLD','VLI'});
 
