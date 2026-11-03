@@ -1,30 +1,5 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.3, P6)
 %
-% BASE: v3.2 de P6 (armonizarUnidadEMG, MVC con n de ensayos y cociente max/min, calidad cinematica por archivo,
-%       n efectivo del ROM, alineacion izq-der solo en S, distanciaMinPicosEj, resumen global con calidad 0/1/2).
-%
-% CAMBIOS v3.3 (marcados con "% [v3.3 CAMBIO]"):
-%  1. ocultarMusculosSinMVC = true: BF_D (MVC al nivel del ruido y pico de tarea = artefacto) queda en NaN y ya
-%     no se normaliza al pico de la tarea (daba 0,5 %, LSI de 4755 %, simetria de -192 %).
-%  2. lagManual: permite fijar el desfase izq-der de un archivo. S1: el automatico (-2,71 s) es un emparejamiento
-%     desplazado un ciclo; S2 y S3 dan +0,54 y +0,71 s y por los picos de S1 el valor real es ~ +0,7 s. VERIFICAR.
-%  3. excluirVentana('ED3.csv') = [5.9 6.9]: fragmento de 0,90 s (rodilla D de ED3 poco fiable).
-%     excluirROM('ED3.csv') = {'kneeD'} queda COMENTADO (decision pendiente).
-%  4. usarPelvisIparaD (false por defecto): prueba EXPLORATORIA de cadera D con la pelvis I como referencia
-%     (slotPelvisD = slotPelvisI). Si se activa, declararlo como variante en la metodologia.
-%  5. Titulos de las figuras de movimiento real coherentes con (4).
-%
-% ADAPTACION A P6 (a partir de la v2.5 de P6):
-%  1. SENSORES POR "SLOTS": faltan los slots 1, 2 y 6 (pelvis D, muslo D, muslo I). Como "muslo" se usa el IMU del
-%     sensor del biceps femoral (cara posterior del muslo): slot 3 = derecho, slot 8 = izquierdo.
-%     => NO hay cadera D (sin pelvis D) salvo prueba (4). Rodillas D e I y cadera I si hay.
-%  2. detectarReposo IGNORA los sensores sin datos.
-%  3. Cuadriceps sin senal y MVC de BF infravalorado: limiteArtefactoEMG_pct = Inf.
-%  4. Archivos de MVC de cuadriceps: MCV1-3.csv (nombre de la v2.5; comprobar si es el nombre real).
-%  5. Valores neutros de P5 (sin excluirVentana S2, etc.).
-%  6. segmentarRepeticiones: umbral de rescate de la ultima repeticion 0,45 (como en P5 v3.2).
-%  NO se porta el modo de cadera "porRepeticion" de la v2.3.
-%
 % LADO OPERADO DE P6: IZQUIERDO.
 % PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC, modoSegmentacion y slots IMU.
 clear; clc; close all;
@@ -33,7 +8,7 @@ clear; clc; close all;
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P6';
-ladoOperado = 'I';          % <<< 'D' o 'I': lado de la rodilla intervenida
+ladoOperado = 'I';          % <<< 'I': lado de la rodilla intervenida
 
 mvcManual = struct();       % ej.: mvcManual.BF_D = 800;  (en uV RMS)
 
@@ -95,7 +70,7 @@ maxLagLados_s        = 4.5;
 umbralValidezAlinear = 0.8;
 minLagCorregir_s     = 0.10;
 minMejoraCorr        = 0.05;
-% [v3.3 CAMBIO] Desfase fijado a mano por archivo (s; >0 = izquierda retrasada). Sustituye al automatico.
+% Desfase fijado a mano por archivo (s; >0 = izquierda retrasada). Sustituye al automatico.
 % S1: el automatico (-2,71 s) esta desplazado un ciclo (S2 = +0,54 s; S3 = +0,71 s). VERIFICAR el valor mirando
 % la figura y que la correlacion D-I sube al alinear (sale impresa en consola).
 lagManual = containers.Map('KeyType','char','ValueType','double');
@@ -113,7 +88,7 @@ excluirROM = containers.Map('KeyType','char','ValueType','any');
 
 recorteManual = containers.Map('KeyType','char','ValueType','any');
 
-% [v3.3 CAMBIO] Prueba EXPLORATORIA: usar la pelvis I como referencia de la cadera D (no hay pelvis D).
+% Prueba EXPLORATORIA: usar la pelvis I como referencia de la cadera D (no hay pelvis D).
 % Da ROM de cadera D y permitiria LSI de cadera; declararlo como variante en la metodologia.
 usarPelvisIparaD = false;
 
@@ -167,7 +142,7 @@ slotTibiaD  = 5;
 slotPelvisI = 4;
 slotMusloI  = 8;
 slotTibiaI  = 7;
-% [v3.3 CAMBIO] prueba exploratoria (ver usarPelvisIparaD)
+% prueba exploratoria (ver usarPelvisIparaD)
 if usarPelvisIparaD, slotPelvisD = slotPelvisI; end
 txtPelvis = ifelse(slotPelvisD == 0,'D sin pelvis; ','D con pelvis I; ');
 
@@ -403,7 +378,7 @@ for is = 1:numel(SIG)
     end
     s.lagBruto = s.lagIzq; s.alineado = false;
     fprintf('%s: lag rodilla I vs D = %+.2f s (>0 = izquierda retrasada)\n',s.archivo,s.lagIzq);
-    % [v3.3 CAMBIO] desfase manual por archivo
+    % desfase manual por archivo
     if isKey(lagManual,s.archivo)
         fprintf('   -> lag MANUAL %+.2f s (sustituye al automático %+.2f s)\n',lagManual(s.archivo),s.lagIzq);
         s.lagIzq = lagManual(s.archivo); s.lagBruto = s.lagIzq;
