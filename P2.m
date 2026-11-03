@@ -1,26 +1,14 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.4, P2)
 %
-% BASE UNIFICADA: v3.3 de P8 (la mas completa), configurada para P2.
-% Respecto al script anterior de P2 (v3):
-%   - Eje de flexo-extension POR ARCHIVO (antes un eje global); signo de cadera por correlacion con la rodilla.
-%   - Reposo POR LADO (antes una ventana comun a los seis sensores).
-%   - Alineacion izq-der solo si |lag| >= 0,10 s, >= 80 % de datos validos en ambos lados y la correlacion
-%     D-I mejora >= 0,05 (antes se alineaba siempre; salian lags de +3,1 s, mayores que medio ciclo).
-%   - EMG INDEPENDIENTE de la cinematica (antes se anulaba el EMG de un lado si faltaba su rodilla).
-%   - Distancia minima entre picos por ejercicio, descarte de fragmentos, excluirVentana/excluirROM,
-%     descarte de saltos angulares, huecos de EMG marcados, calidad 0/1/2 con nMinROM = 5.
-%   - fr100 (% de repeticiones con pico > 100 %) se calcula solo con repeticiones con dato.
 % LADO OPERADO DE P2: IZQUIERDO.
 % P2: distanciaMinPicosEj('EI') = 2,2 s (con 0,8 s cada ciclo de EI se contaba dos veces: 28 repeticiones).
-% PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC, modoSegmentacion y
-% distanciaMinPicosEj.
 clear; clc; close all;
 
 %% ============================================================
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P2';
-ladoOperado = 'I';          % <<< 'D' o 'I': lado de la rodilla intervenida
+ladoOperado = 'I';          % 'I': lado de la rodilla intervenida
 
 mvcManual = struct();       % ej.: mvcManual.VM_I = 150;  (en uV RMS)
 
