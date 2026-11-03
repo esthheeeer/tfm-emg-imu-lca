@@ -33,10 +33,16 @@ Formato de los archivos (exportación de OT BioLab, `.csv`):
 - Nombres de archivo: [p. ej. `ED18.csv` = tarea ..., `ei..`, `S..`, MVC ...]
 
 ## Ejecución
-1. Coloca los archivos del paciente en `PX/`.
-2. Abre MATLAB, sitúate en la carpeta `PX/` y ejecuta `[PX.m]`.
-3. Genera: variables, tablas, figuras y se guardan en la misma carpeta y las figuras se guardan en la carpeta dentro de la otra de PX_figuras.
-4. Repite para cada paciente (P1–P8).
+Cada paciente tiene su propio script (`P1`…`P8`), independiente de los demás.
+Se ejecuta desde la carpeta que contiene los CSV de ese paciente (tareas S*, ED*, EI* y
+MVC: MVC*, GMD*, GMI*, ID*, II*). El orden entre pacientes no importa.
+
+Cada script procesa EMG e IMU, calcula %MVC, ángulos de cadera y rodilla, segmenta
+repeticiones y guarda tablas (.csv) y figuras (.png) de ese paciente. El archivo
+`PX_resumen_global.csv` contiene el LSI y su calidad.
+
+Los scripts difieren entre pacientes (versión, señal de segmentación, método de
+cadera) para adaptarse a los problemas de cada registro.
 
 ## Cita
 Rego Falagán, E. (2026). *Análisis electromiográfico y cinemático en pacientes
