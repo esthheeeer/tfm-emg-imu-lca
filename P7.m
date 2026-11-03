@@ -1,32 +1,13 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.1, P7)
 %
-% v2.2-v2.6: ver historial anterior (ejes por archivo, saltos, canales ausentes, figuras ligeras).
-% v3: - armonizarUnidadEMG: cada canal de cada archivo (tareas y MVC) se pasa a uV segun la
-%       resolucion del ADC (0,298 -> uV; 0,000298 -> mV); se guarda P7_unidades_EMG_originales.csv.
-%     - MVC con n de ensayos validos y cociente max/min (aviso si > 3).
-%     - Calidad cinematica por archivo (P7_calidad_cinematica_por_archivo.csv).
-%     - Alineacion izq-der solo en S si |lag| >= umbralLagAlinear, con avisos; lag manual opcional.
-%     - Distancia minima entre picos por ejercicio (distanciaMinPicosEj).
-%     - Descarte de repeticiones: huecos, < 50 % de la mediana, ventanas manuales (excluirRep).
-%     - Reposo de calibracion con los sensores disponibles (ignora sensores sin datos).
-%     - Opcion pelvisUnica para usar una sola pelvis como referencia de ambas caderas.
-%     - P7_resumen_global.csv (Op/Sana, Delta, LSI, Calidad 0/1/2 con motivo).
-% v3.1 (P7): - incluirRepEj: repeticion final incompleta por ejercicio (true en S: el intervalo activo
-%              acababa justo al volver la rodilla a 0 y se perdia el ultimo ciclo de cada serie).
-%            - distanciaMinPicosEj('EI') = 1.8 s (evita contar las jorobas secundarias como picos).
-%            - recorteManual('EI17.csv') = [7.3 16.2] (movimiento previo a la serie, sin EMG).
-%            - depurarPicos: imprime tiempos y prominencias de los picos detectados (diagnostico de EI27).
-%            - paneles de cadera sin datos marcados como "Sin datos validos" en el movimiento medio.
-%
-% SOLO CAMBIAN POR PACIENTE: paciente, ladoOperado, archivosTarea, archivosMVC, modoSegmentacion
-% (y, si hace falta, distanciaMinPicosEj, lagManual, excluirRep, mvcManual, pelvisUnica, recorteManual).
+%LADO AFECTADO: DERECHO
 clear; clc; close all;
 
 %% ============================================================
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P7';
-ladoOperado = 'D';      % 'D' o 'I'   % VERIFICAR (P7: lado operado derecho)
+ladoOperado = 'D';      % 'D'   
 
 mvcManual = struct();   % Ejemplo: mvcManual.VM_I = 150;
 
@@ -71,13 +52,13 @@ rellenoHuecos_s         = 0.20;
 
 % Repeticiones
 distanciaMinPicos_s  = 0.8;     % valor por defecto
-% [v3] distancia minima entre picos por ejercicio (evita doble conteo)
-% [v3.1 P7] EI: 1,8 s (periodo real ~2,5 s; las jorobas secundarias de la rodilla quedan a ~1-1,4 s del pico).
+% distancia minima entre picos por ejercicio (evita doble conteo)
+% EI: 1,8 s (periodo real ~2,5 s; las jorobas secundarias de la rodilla quedan a ~1-1,4 s del pico).
 distanciaMinPicosEj = containers.Map({'S','ED','EI'},{0.8,0.8,1.8});   % VERIFICAR tras ver la segmentacion de P7
 prominenciaMin_deg   = 8;
 fraccionProminencia  = 0.5;
 incluirRepIncompleta = false;   % valor por defecto
-% [v3.1] Repeticion final "incompleta" por ejercicio. En S el intervalo activo termina justo cuando la
+% Repeticion final "incompleta" por ejercicio. En S el intervalo activo termina justo cuando la
 % rodilla vuelve a ~0 y la ultima repeticion era descartada; se incluye. En ED/EI (series cortadas al
 % final del archivo, p. ej. ED27 y EI17) se mantiene descartada.
 incluirRepEj = containers.Map({'S','ED','EI'},{true,false,false});
@@ -94,7 +75,7 @@ umbralValidezAlinear = 0.8;
 umbralLagAlinear     = 0.1;     % [v3] no se alinea si |lag| < 0,1 s
 lagManual = containers.Map('KeyType','char','ValueType','any');   % ej.: lagManual('S17.csv') = 0.70;
 
-% [v3.1 P7] EI17: la rodilla se mueve a ~3,2 s y ~6,5-7 s sin actividad del cuadriceps (previo a la serie);
+% EI17: la rodilla se mueve a ~3,2 s y ~6,5-7 s sin actividad del cuadriceps (previo a la serie);
 % la serie con EMG empieza a ~8 s. Se recorta el intervalo activo.   % VERIFICAR con anotaciones/video
 recorteManual = containers.Map('KeyType','char','ValueType','any');
 recorteManual('EI17.csv') = [7.3 16.2];
@@ -362,7 +343,7 @@ for is = 1:numel(SIG)
     end
     fprintf('%s: datos válidos en zona activa D=%.0f %%, I=%.0f %%\n',s.archivo,100*fD,100*fI);
 
-    % ---- [v3] desfase izquierda-derecha ----
+    %  desfase izquierda-derecha ----
     lagAuto = 0;
     if min(fD,fI) > 0.2, lagAuto = lagIzqVsDer(s.kneeFlexD,s.kneeFlexI,Fs,maxLagLados_s); end
     s.lagIzq = lagAuto;
@@ -400,7 +381,7 @@ for is = 1:numel(SIG)
         fprintf('%s: recorte manual %.1f - %.1f s\n',s.archivo,rc(1),rc(2));
     end
 
-    % ---- [v3] calidad cinematica por archivo ----
+    %  calidad cinematica por archivo ----
     c = struct(); c.Archivo = string(s.archivo); c.Ejercicio = string(s.ejercicio);
     c.NoValido_PelvisD_pct = s.pNV(1); c.NoValido_MusloD_pct = s.pNV(2); c.NoValido_TibiaD_pct = s.pNV(3);
     c.NoValido_PelvisI_pct = s.pNV(4); c.NoValido_MusloI_pct = s.pNV(5); c.NoValido_TibiaI_pct = s.pNV(6);
