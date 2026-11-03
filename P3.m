@@ -1,36 +1,13 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3, P3)
 %
-% BASE: v2.2 de P3 (eje/signo por archivo, reposo por lado) + cambios v3:
-%   1. UNIDADES EMG: cada canal de cada archivo se convierte a uV (armonizarUnidadEMG).
-%   2. Cuaterniones: validez por norma RELATIVA (nodos con norma 8,19 o 8192).
-%   3. Comprobacion de Fs del archivo frente a FsEMG.
-%   4. Calidad cinematica por archivo, % no valido por sensor y n efectivo del ROM.
-%   5. MVC: n de ensayos validos y cociente max/min.
-%   6. Alineacion izq-der solo si |lag| >= umbralLagAlinear_s y datos validos en ambos lados;
-%      avisos si |lag| > media duracion de ciclo; NO se alinea si |lag| esta en el limite de la xcorr.
-%   7. Distancia minima entre picos POR EJERCICIO (distanciaMinPicosEj), para evitar dobles conteos.
-%   8. Seccion 12: LSI = operada/sana x 100, Delta y calidad 0/1/2 -> P3_resumen_global.csv
-%   9. cargarCSV prueba varios delimitadores/decimales.
-%  10. (P3) pelvisUnica = true, segmentacion de S con 'D', umbralValidezAlinear = 0,8,
-%      exclusion opcional de ventanas (excluirVentana) e impresion de cada repeticion,
-%      interruptor ejeArchivoAnulaCalidad y Lag_bruto_s en el CSV de calidad cinematica.
-%  11. (P3, correccion tras la primera ejecucion)
-%      a) SEGMENTACION CENTRADA EN EL PICO para los modos basados en EMG ('VLD'): cada repeticion
-%         contiene exactamente una rafaga; los limites son el punto medio entre picos consecutivos
-%         (+-P/2 en los extremos). Antes se usaba el minimo entre rafagas (valle), que en la
-%         envolvente del EMG cae en un punto arbitrario y producia repeticiones de 1,4-7 s.
-%         S sigue con la segmentacion valle-valle (cadera D).
-%      b) padFinalSeg_s de ED/EI = 1,5 s para no perder la ultima rafaga.
-%      c) Calidad del ROM: si el n efectivo (operada o sana) es < nMinROM, calidad 0.
-%
-% PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC y modoSegmentacion.
+% Rodilla operada: IZQUIERDA
 clear; clc; close all;
 
 %% ============================================================
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P3';
-ladoOperado = 'I';          % <<< 'D' o 'I': lado de la rodilla intervenida
+ladoOperado = 'I';          % 'I': lado de la rodilla intervenida
 
 mvcManual = struct();       % ej.: mvcManual.GM_I = 300;  (en uV RMS)
 
