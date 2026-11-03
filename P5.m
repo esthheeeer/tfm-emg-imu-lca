@@ -1,37 +1,6 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.2, P5)
 %
-% BASE: v3.1 de P5 (sensor del muslo I sin senal -> sin cadera I ni rodilla I) + cambios v3:
-%   1. UNIDADES EMG: cada canal de cada archivo se convierte a uV (armonizarUnidadEMG).
-%   2. Cuaterniones: validez por norma RELATIVA (nodos con norma 8,19 o 8192).
-%   3. Comprobacion de Fs del archivo frente a FsEMG.
-%   4. Calidad cinematica por archivo, % no valido por sensor y n efectivo del ROM.
-%   5. MVC: n de ensayos validos y cociente max/min.
-%   6. Desfase izq-der: solo en S, solo si |lag| >= minLagCorregir_s y la correlacion mejora.
-%      En P5 NO hay cinematica izquierda: no se alinea. Se calcula un lag ORIENTATIVO con la
-%      envolvente del cuadriceps (Lag_EMG_orientativo_s), que NO se aplica.
-%   7. Distancia minima entre picos POR EJERCICIO (distanciaMinPicosEj) para evitar dobles conteos.
-%   8. Seccion 12: LSI = operada/sana x 100, Delta y calidad 0/1/2 -> P5_resumen_global.csv
-%   9. cargarCSV prueba varios delimitadores/decimales y NO elimina columnas vacias
-%      (necesario en P5: las columnas 34:37 del muslo I estan vacias y desplazarian todos los indices).
-%  10. Segmentacion: relleno final (padFinalSeg_s), descarte de fragmentos (fracDurMinRep),
-%      primer valle mejorado, excluirVentana, excluirROM, impresion de cada repeticion y modos
-%      'HD','HI','VLD','VLI' (los de EMG, centrados en el pico).
-%  11. Calidad del ROM: n efectivo minimo nMinROM = 5 (operada y sana).
-%  12. Canal sin senal en UN lado => Calidad 0 y LSI NaN.
-%
-% CAMBIOS v3.2 (tras revisar la ejecucion de v3.1):
-%  13. excluirROM('hipD') en S2, ED2, EI2 y EI3: el eje de cadera de esos archivos se aleja del global
-%      (|cos| 0,09-0,37) y el trazado deriva. Ahora excluirROM tambien anula esa articulacion en las
-%      CURVAS MEDIAS (antes solo en el ROM por repeticion).
-%  14. segmentarRepeticiones: umbral de rescate de la ultima repeticion 0,25 -> 0,45 (ED3 mostraba 5 ciclos
-%      y se segmentaban 4). COMPROBAR que S3 y el resto no cambian de forma indeseada.
-%  15. Interruptores de diagnostico (apagados por defecto): diagnosticoMVC_GM y diagnosticoBF_D.
-%  Sin cambiar (decision pendiente): ladoOperado, reposoManual, mvcManual, colMVC.GM_I, limiteArtefactoEMG_pct.
-%
-% P5: el muslo I (sensor S6) NO tiene cuaternion => no hay rodilla I ni cadera I.
-%     La segmentacion de EI (pierna I inicia) cae automaticamente a la rodilla D si la I no existe.
-%     El EMG de ambos lados es independiente de la cinematica.
-% LADO OPERADO DE P5: IZQUIERDO (VERIFICAR; deducido de que P4, P7 y P8 son derechos).
+% LADO OPERADO DE P5: IZQUIERDO.
 % PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC y modoSegmentacion.
 clear; clc; close all;
 
@@ -39,7 +8,7 @@ clear; clc; close all;
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P5';
-ladoOperado = 'I';          % <<< 'D' o 'I': lado de la rodilla intervenida (VERIFICAR en P5)
+ladoOperado = 'I';          % <<< 'I': lado de la rodilla intervenida (VERIFICAR en P5)
 
 mvcManual = struct();       % ej.: mvcManual.VM_I = 150;  (en uV RMS)
 
