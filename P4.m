@@ -1,40 +1,5 @@
 %% ANALISIS TFM (LCA): EMG + IMU + MVC - MEDIA POR EJERCICIO  (v3.2, P4)
 %
-% BASE: v2.4 de P4 (cadera por inclinacion del muslo, sin sensores de pelvis) + cambios v3:
-%   1. UNIDADES EMG: cada canal de cada archivo se convierte a uV (armonizarUnidadEMG).
-%   2. Cuaterniones: validez por norma RELATIVA (nodos con norma 8,19 o 8192).
-%   3. Comprobacion de Fs del archivo frente a FsEMG.
-%   4. Calidad cinematica por archivo, % no valido por sensor y n efectivo del ROM.
-%   5. MVC: n de ensayos validos y cociente max/min.
-%   6. Desfase izq-der: se MANTIENE el estimador por correlacion cruzada de v2.4 y alinearLados = false;
-%      se guarda el lag bruto.
-%   7. Distancia minima entre picos POR EJERCICIO (distanciaMinPicosEj), para evitar dobles conteos.
-%   8. Seccion 12: LSI = operada/sana x 100, Delta y calidad 0/1/2 -> P4_resumen_global.csv
-%   9. cargarCSV prueba varios delimitadores/decimales.
-%  10. Segmentacion: relleno final (padFinalSeg_s), descarte de fragmentos (fracDurMinRep), primer valle
-%      mejorado, exclusion opcional de ventanas (excluirVentana) y de ROM por archivo (excluirROM),
-%      impresion de cada repeticion. Segmentacion centrada en el pico para modos EMG ('VLD','VLI').
-%  11. Calidad del ROM: n efectivo minimo nMinROM = 5 (operada y sana).
-%  12. (P4) CADERA = inclinacion sagital del muslo respecto a la vertical (no usa la pelvis). En la calidad
-%      del resumen global la cadera queda con tope 1.
-%  13. CANAL SIN SENAL (resumen global): si el pico de UN lado es < umbralCanalPlano_pct en todas las
-%      repeticiones, Calidad = 0 y LSI = NaN.
-%
-% CAMBIOS v3.2 (marcados con "% [v3.2]"):
-%  A. SEGMENTACION DEL ESCALON POR EL VASTO LATERAL DEL LADO QUE INICIA: ED -> 'VLD', EI -> 'VLI'.
-%     (La cadera 'HD' dejaba el minimo en una zona plana y los cortes variaban; el VL del lado que inicia
-%     tiene picos claros.) Se ANADE el modo 'VLI', que no existia: antes cualquier modo desconocido caia
-%     en 'ambas' sin avisar. Ahora un modo no valido da ERROR.
-%  B. 'centrado' y los umbrales de prominencia del EMG se definen ANTES de usarse y valen para VLD y VLI.
-%  C. distanciaMinPicosEj('ED') = distanciaMinPicosEj('EI') = 2,0 s (ciclo ~2,1-3,6 s). Si Duracion_rep_s
-%     sale la mitad en algun ejercicio, subir a 2,2; si se fusionan ciclos cortos, bajar a 1,8.
-%  D. Resumen global: el % de repeticiones con pico > 100 % MVC se calcula SOLO con repeticiones con dato
-%     (antes las repeticiones NaN del lado sin senal entraban en el denominador).
-%  E. El numero de repeticiones validas se imprime DESPUES de aplicar excluirVentana.
-%  F. Comentarios de padFinalSeg_s y de la cabecera corregidos (el valor activo es S = 1,0).
-%  G. mvcManual.VM_D sigue COMENTADO: activar solo tras revisar la senal cruda de MVC3.csv (columna 8).
-%     Si se activa, el ratio max/min sigue siendo 3,34 y el LSI de VM mantiene calidad 1.
-%
 % LADO OPERADO DE P4: DERECHO.
 % PARA OTRO PACIENTE: cambiar paciente, ladoOperado, archivosTarea, archivosMVC y modoSegmentacion.
 clear; clc; close all;
@@ -43,7 +8,7 @@ clear; clc; close all;
 % 1. CONFIGURACION GENERAL
 % =============================================================
 paciente    = 'P4';
-ladoOperado = 'D';          % <<< 'D' o 'I': lado de la rodilla intervenida
+ladoOperado = 'D';          % <<< 'D': lado de la rodilla intervenida
 
 mvcManual = struct();       % ej.: mvcManual.VM_I = 150;  (en uV RMS)
 % P4: el MVC de VM_D (418,2 uV) es 2,7 veces el del segundo ensayo (155,8 uV) y VL_D, que comparte
@@ -81,10 +46,10 @@ ejePorArchivo = true;
 maxHuecoQ_s   = 1.0;
 
 % ---- CADERA ----
-%   'inclinacionMuslo'   (recomendado) angulo sagital del muslo respecto a la vertical
+%   'inclinacionMuslo'   angulo sagital del muslo respecto a la vertical
 %   'porRepeticionMuslo' muslo respecto al inicio de cada repeticion (sin pelvis)
-%   'porRepeticion'      pelvis->muslo respecto al inicio de cada repeticion (v2.3)
-%   'continuo'           pelvis->muslo continuo con mascaras (v2.3)
+%   'porRepeticion'      pelvis->muslo respecto al inicio de cada repeticion
+%   'continuo'           pelvis->muslo continuo con mascaras 
 modoCadera            = 'inclinacionMuslo';
 cfgInc = struct('minVert',0.80, ...      % |z| minimo del eje largo del muslo en reposo (0.8 = hasta ~37 grados de la vertical)
                 'tiltMinF',30, ...       % grados de inclinacion a partir de los que se fija el sentido "adelante"
